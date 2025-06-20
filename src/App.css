@@ -1,0 +1,361 @@
+.logo.vite:hover {
+  filter: drop-shadow(0 0 2em #747bff);
+}
+
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafb);
+}
+:root {
+  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color: #213547;
+  background-color: #f9f9f9;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+.container {
+  margin: 0 auto;
+  padding: 2rem;
+  max-width: 1600px;
+  text-align: left;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 1rem;
+}
+
+header h1 {
+  font-size: 2.5em;
+  margin: 0;
+}
+
+header p {
+  margin: 0.25rem 0 0;
+  color: #666;
+}
+
+.actions {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.actions button {
+  background-color: #4caf50;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1em;
+}
+
+.actions button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.error-message {
+  color: #d8000c;
+  background-color: #ffd2d2;
+  border: 1px solid;
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 3px;
+}
+
+.editor-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: flex-start;
+}
+
+.resume-form {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  overflow-y: auto;
+}
+
+.form-section {
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.form-section h2 {
+  margin-top: 0;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.75rem;
+  margin-bottom: 1.5rem;
+  font-size: 1.5em;
+}
+
+.form-subsection {
+  border: 1px dashed #ccc;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-subsection:last-child {
+  margin-bottom: 0;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="url"],
+textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 1em;
+  font-family: inherit;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+input:focus,
+textarea:focus {
+  outline: none;
+  border-color: #646cff;
+  box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.2);
+}
+
+textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #f0f0f0;
+  cursor: pointer;
+  transition: border-color 0.25s;
+  align-self: flex-start;
+}
+
+button:hover {
+  border-color: #646cff;
+}
+
+.form-section > button,
+.form-subsection > button {
+  background-color: #e7e7e7;
+}
+
+.form-subsection > button {
+  background-color: #fbecec;
+  color: #c53030;
+  border: 1px solid #fbcaca;
+}
+.form-subsection > button:hover {
+  background-color: #f9dede;
+  border-color: #f7b3b3;
+}
+
+.skill-input-group {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.skill-input-group input {
+  flex-grow: 1;
+}
+
+.skills-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.skill-tag {
+  background-color: #eef2ff;
+  color: #4338ca;
+  padding: 0.4em 0.8em;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-size: 0.9em;
+}
+
+.skill-tag button {
+  background: none;
+  border: none;
+  color: #6366f1;
+  cursor: pointer;
+  padding: 0;
+  font-size: 1.2em;
+  line-height: 1;
+  font-weight: bold;
+}
+
+.skill-tag button:hover {
+  color: #4338ca;
+}
+
+.live-preview-section {
+  position: sticky;
+  top: 2rem;
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.live-preview-section h2 {
+  margin-top: 0;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.75rem;
+  margin-bottom: 1.5rem;
+  font-size: 1.5em;
+}
+
+.preview-content {
+  font-family: "Times New Roman", Times, serif;
+  line-height: 1.4;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color: #f6f6f6;
+    background-color: #242424;
+  }
+  .form-section {
+    background-color: #2f2f2f;
+    border-color: #444;
+  }
+  .form-subsection {
+    border-color: #555;
+  }
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="url"],
+  textarea {
+    background-color: #1a1a1a;
+    border-color: #555;
+    color: #f6f6f6;
+  }
+  input:focus,
+  textarea:focus {
+    border-color: #535bf2;
+    box-shadow: 0 0 0 2px rgba(83, 91, 242, 0.3);
+  }
+  .form-subsection > button {
+    background-color: #3b2323;
+    color: #f6a5a5;
+    border: 1px solid #583333;
+  }
+  .form-subsection > button:hover {
+    background-color: #452a2a;
+    border-color: #6d4242;
+  }
+  .skill-tag {
+    background-color: #312e75;
+    color: #c7d2fe;
+  }
+  .live-preview-section {
+    background-color: #2f2f2f;
+    border-color: #444;
+  }
+}
+
+.version-manager-section {
+  background-color: #fdfdfd;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  margin-bottom: 2rem;
+}
+
+.version-manager-section h2 {
+  margin-top: 0;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.75rem;
+  margin-bottom: 1.5rem;
+  font-size: 1.5em;
+}
+
+.version-save-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.version-save-form input {
+  flex-grow: 1;
+}
+
+.version-save-form button {
+  white-space: nowrap;
+}
+
+.versions-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.versions-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  border-radius: 4px;
+}
+
+.versions-list li:nth-child(odd) {
+  background-color: #f7f7f7;
+}
+
+.versions-list span {
+  font-size: 0.9em;
+}
+
+.version-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.version-actions button {
+  padding: 0.3em 0.8em;
+  font-size: 0.9em;
+}
+
+.version-actions button.delete {
+  background-color: #fbecec;
+  color: #c53030;
+  border: 1px solid #fbcaca;
+}

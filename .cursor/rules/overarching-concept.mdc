@@ -1,0 +1,29 @@
+---
+description: This rule contains information about the concept and the end goal of the project.
+globs: 
+alwaysApply: false
+---
+Overarching Concept: The Effortless Professionalism Engine
+The Vision: To create a desktop application that empowers professionals to craft and manage beautiful, perfectly typeset resumes with zero friction. We are building a tool that combines the typographic excellence of LaTeX with the intuitive user experience of a modern app.
+
+The Core Idea: "Content-First, Format-Perfect"
+At its heart, this application is about separating content from presentation. Our user is an expert in their field; their primary job is to provide the content of their resume—their experience, skills, and accomplishments. Our application's primary job is to handle the presentation flawlessly and automatically.
+
+Think of it as a "digital print shop" for a resume. The user simply provides the text and details through a clean, simple form. Our application, like a master typesetter, takes that information and instantly produces a professionally designed PDF based on our locked-in, high-quality LaTeX template.
+
+The user's focus should always be on the what (their career story), never on the how (the complexities of LaTeX compilation and document layout).
+
+The Desired User Experience: "The Glass Box"
+The user's interaction should feel like they are using a "glass box."
+Through the Glass (The UI): They interact with a clean, modern, and intuitive interface built in React. Every action is simple. Text fields are for typing text. Buttons are for adding or removing sections. The experience is responsive and self-explanatory.
+Inside the Box (The Backend): Hidden from view is the powerful Rust engine. This engine handles the complex and heavy work: taking the simple data from the UI, intelligently weaving it into a sophisticated LaTeX document structure, and compiling it into a pixel-perfect PDF using the embedded tectonic engine.
+The user never needs to see, write, or even understand a single line of LaTeX code. We are abstracting away all the complexity, providing them with the power of LaTeX without the steep learning curve.
+
+Our Guiding Principles
+These three principles should inform every technical and design decision:
+
+A Single Source of Truth: The React state object (ResumeData) is the undisputed master of all data. The UI form is merely a way to edit this object. The live preview is a direct rendering of this object. The database saves snapshots of this object. The PDF is the final, compiled artifact of this object. This principle simplifies logic, eliminates data conflicts, and ensures consistency across the entire application.
+
+Instantaneous Feedback: The application must feel alive and responsive. When the user types a character in a form field, they should see the live preview update immediately. When they click "save," the feedback should be instant. This tight feedback loop builds user confidence and makes the tool feel powerful and reliable.
+
+Secure and Self-Contained by Default: We are building a native desktop application for a reason. All user data, including every saved version of their resume, is stored locally and securely on their own machine in an SQLite file. There is no cloud component. The application works entirely offline. This focus on privacy and reliability is a core feature, not an afterthought. The choice of Tauri and tectonic ensures the entire application—compiler and all—is contained within a single, easy-to-install package.

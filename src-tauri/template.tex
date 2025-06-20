@@ -1,0 +1,47 @@
+\documentclass{article}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=blue,
+    pdftitle={__USER_NAME__'s Resume},
+    pdfpagemode=FullScreen,
+}
+
+\titleformat{\section}
+  {\Large\bfseries\scshape\raggedright}
+  {}
+  {0em}
+  {}
+  [\titlerule]
+
+\begin{document}
+
+\begin{center}
+    {\Huge \bfseries __USER_NAME__}
+    \vspace{2mm} \\
+    \href{mailto:__USER_EMAIL__}{__USER_EMAIL__} | __USER_PHONE__ | \href{http://__USER_WEBSITE__}{__USER_WEBSITE__}
+\end{center}
+
+\section*{Summary}
+__USER_SUMMARY__
+
+\section*{Work Experience}
+\begin{itemize}[leftmargin=*]
+    __WORK_EXPERIENCE_ENTRIES__
+\end{itemize}
+
+\section*{Education}
+\begin{itemize}[leftmargin=*]
+    __EDUCATION_ENTRIES__
+\end{itemize}
+
+\section*{Skills}
+__SKILLS_LIST__
+
+\end{document} 
