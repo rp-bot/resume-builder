@@ -1,73 +1,36 @@
-import { useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
-import { ResumeData } from "./types";
-import PersonalInfoForm from "./components/forms/PersonalInfoForm";
-import WorkExperienceForm from "./components/forms/WorkExperienceForm";
-import EducationForm from "./components/forms/EducationForm";
-import SkillsForm from "./components/forms/SkillsForm";
-import LivePreview from "./components/LivePreview";
-import { savePdfToFile } from "./utils/fileSaver";
-import VersionManager from "./components/VersionManager";
-import "./App.css";
+// src/App.tsx (initial structure)
+import { useState, useEffect } from 'react';
+import { invoke } from '@tauri-apps/api/core';
+import { ResumeData } from './types/resume';
 
 function App() {
-  const [resumeData, setResumeData] = useState<ResumeData>({
-    personalInfo: {
-      name: "",
-      email: "",
-      phone: "",
-      website: "",
-      summary: "",
-    },
-    workExperience: [],
-    education: [],
-    skills: [],
-  });
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [resumeData, setResumeData] = useState<ResumeData | null>(null);
 
-  const handleDownload = async () => {
-    setIsGenerating(true);
-    setError(null);
-    try {
-      const pdfBytes = await invoke<number[]>("generate_pdf", {
-        resumeDataJson: JSON.stringify(resumeData),
-      });
-      savePdfToFile(new Uint8Array(pdfBytes), `${resumeData.personalInfo.name.replace(/\s/g, "_")}_Resume.pdf`);
-    } catch (e) {
-      setError(e as string);
-      console.error("Failed to generate PDF:", e);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
+  // Load data from the backend when the component mounts
+  useEffect(() => {
+    invoke<string>('load_resume_data')
+      .then(jsonString => {
+        // Parse the data from the backend, providing a default structure if it's empty
+        const data = JSON.parse(jsonString || '{}');
+        setResumeData({
+          personalInfo: data.personalInfo || { name: '', email: '', phone: '', website: '', summary: '' },
+          workExperience: data.workExperience || [],
+          education: data.education || [],
+          skills: data.skills || [],
+        });
+      })
+      .catch(console.error);
+  }, []);
+
+  if (!resumeData) {
+    return <div>Loading...</div>;
+  }
 
   return (
-    <main className="container">
-      <header>
-        <h1>Resume Builder</h1>
-        <p>Craft your professional resume with ease.</p>
-        <div className="actions">
-          <button onClick={handleDownload} disabled={isGenerating}>
-            {isGenerating ? "Generating..." : "Download PDF"}
-          </button>
-          {error && <p className="error-message">Error: {error}</p>}
-        </div>
-      </header>
-      <div className="editor-layout">
-        <div className="resume-form">
-          <VersionManager currentResumeData={resumeData} onLoadVersion={setResumeData} />
-          <PersonalInfoForm personalInfo={resumeData.personalInfo} onChange={(newInfo) => setResumeData({ ...resumeData, personalInfo: newInfo })} />
-          <WorkExperienceForm
-            workExperience={resumeData.workExperience}
-            onChange={(newExperience) => setResumeData({ ...resumeData, workExperience: newExperience })}
-          />
-          <EducationForm education={resumeData.education} onChange={(newEducation) => setResumeData({ ...resumeData, education: newEducation })} />
-          <SkillsForm skills={resumeData.skills} onChange={(newSkills) => setResumeData({ ...resumeData, skills: newSkills })} />
-        </div>
-        <LivePreview resumeData={resumeData} />
-      </div>
-    </main>
+    <div className="container">
+      <h1>Resume Builder</h1>
+      {/* We will add our form components here */}
+    </div>
   );
 }
 
