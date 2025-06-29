@@ -1,16 +1,18 @@
-// src/App.tsx (initial structure)
+// src/App.tsx (updated)
+
 import { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { ResumeData } from './types/resume';
+import { EducationSection } from './components/EducationSection';
+import { ActionsPanel } from './components/ActionsPanel'; // Import the new component
 
 function App() {
   const [resumeData, setResumeData] = useState<ResumeData | null>(null);
 
-  // Load data from the backend when the component mounts
   useEffect(() => {
+    // ... same as before
     invoke<string>('load_resume_data')
       .then(jsonString => {
-        // Parse the data from the backend, providing a default structure if it's empty
         const data = JSON.parse(jsonString || '{}');
         setResumeData({
           personalInfo: data.personalInfo || { name: '', email: '', phone: '', website: '', summary: '' },
@@ -28,8 +30,20 @@ function App() {
 
   return (
     <div className="container">
-      <h1>Resume Builder</h1>
-      {/* We will add our form components here */}
+      <header>
+        <h1>Resume Builder</h1>
+        {/* --- Integration Point for Actions --- */}
+        <ActionsPanel resumeData={resumeData} />
+      </header>
+      
+      <main>
+        {/* Your form sections go here */}
+        <EducationSection
+          education={resumeData.education}
+          setResumeData={setResumeData}
+        />
+        {/* ...other sections... */}
+      </main>
     </div>
   );
 }

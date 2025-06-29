@@ -1,85 +1,9 @@
-// We've removed the SQL-related `use` statements
-use comemo::Prehashed;
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::PathBuf;
 // Add AppHandle to get access to the path resolver
 use tauri::{AppHandle, Manager};
-use typst::diag::{FileError, FileResult};
-use typst::eval::Tracer;
-use typst::foundations::{Bytes, Datetime, Smart};
-use typst::syntax::{FileId, Source, VirtualPath};
-use typst::text::{Font, FontBook};
-use typst::{Library, World};
 
-// The TypstWorld implementation remains the same
-struct TypstWorld {
-    library: Prehashed<Library>,
-    book: Prehashed<FontBook>,
-    fonts: Vec<Font>,
-    source: Source,
-}
-
-impl TypstWorld {
-    pub fn new(source: Source) -> Self {
-        let lib = Library::default();
-        let mut book = FontBook::new();
-        let mut fonts = Vec::new();
-
-        let font_paths = vec![std::path::Path::new("fonts")];
-        for path in font_paths {
-            if path.is_dir() {
-                for entry in fs::read_dir(path).unwrap() {
-                    let entry = entry.unwrap();
-                    let path = entry.path();
-                    if let Some(extension) = path.extension() {
-                        if extension == "ttf" || extension == "otf" {
-                            let font_bytes = fs::read(&path).unwrap();
-                            let buffer = Bytes::from(font_bytes);
-                            for font in Font::iter(buffer) {
-                                book.push(font.info().clone());
-                                fonts.push(font);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        Self {
-            library: Prehashed::new(lib),
-            book: Prehashed::new(book),
-            fonts,
-            source,
-        }
-    }
-}
-
-impl World for TypstWorld {
-    fn library(&self) -> &Prehashed<Library> {
-        &self.library
-    }
-    fn book(&self) -> &Prehashed<FontBook> {
-        &self.book
-    }
-    fn main(&self) -> Source {
-        self.source.clone()
-    }
-    fn source(&self, _id: FileId) -> FileResult<Source> {
-        Ok(self.source.clone())
-    }
-    fn file(&self, _id: FileId) -> FileResult<Bytes> {
-        Err(FileError::NotFound(PathBuf::from("")))
-    }
-    fn font(&self, index: usize) -> Option<Font> {
-        self.fonts.get(index).cloned()
-    }
-    fn today(&self, _offset: Option<i64>) -> Option<Datetime> {
-        None
-    }
-}
-
-// The resume data structs remain the same
+// Resume data structs
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 struct PersonalInformation {
@@ -128,64 +52,122 @@ struct ResumeData {
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
-
-// The `generate_pdf` command remains the same
 #[tauri::command]
-async fn generate_pdf(resume_data_json: &str) -> Result<Vec<u8>, String> {
+async fn generate_latex(app_handle: AppHandle, resume_data_json: &str) -> Result<String, String> {
     let resume_data: ResumeData = serde_json::from_str(resume_data_json)
         .map_err(|e| format!("Failed to deserialize resume data: {}", e))?;
 
-    let mut typst_source = String::new();
-    typst_source.push_str(&format!(
-        "#set document(author: \"{}\")\n",
-        resume_data.personal_info.name
-    ));
-    typst_source.push_str("#set text(font: \"Linux Libertine\")\n");
-    typst_source.push_str(&format!(
-        "#align(center)[#text(1.5em)[*{}*]]\n",
-        resume_data.personal_info.name
-    ));
-    typst_source.push_str(&format!(
-        "#align(center)[{}\n{} / {}\n]\n\n",
-        resume_data.personal_info.email,
-        resume_data.personal_info.phone,
-        resume_data.personal_info.website
-    ));
-    typst_source.push_str(&format!("{}\n\n", resume_data.personal_info.summary));
-    typst_source.push_str("== Work Experience\n");
-    for exp in &resume_data.work_experience {
-        typst_source.push_str(&format!(
-            "[*{}*] at [*{}*] #h(1fr) [{}]\n",
-            exp.role, exp.company, exp.dates
-        ));
-        typst_source.push_str(&format!("{}\n", exp.description));
-    }
-    typst_source.push_str("\n== Education\n");
-    for edu in &resume_data.education {
-        typst_source.push_str(&format!(
-            "[*{}*] at [*{}*] #h(1fr) [{}]\n",
-            edu.degree, edu.institution, edu.dates
-        ));
-        typst_source.push_str(&format!("{}\n", edu.details));
-    }
-    typst_source.push_str("\n== Skills\n");
-    let skills_list = resume_data
-        .skills
-        .iter()
-        .map(|skill| format!("#text(fill: blue)[{}]", skill.name))
-        .collect::<Vec<String>>()
-        .join(", ");
-    typst_source.push_str(&skills_list);
+    // Read the template file
+    let template_path = app_handle
+        .path()
+        .resource_dir()
+        .map_err(|e| format!("Failed to get resource directory: {}", e))?
+        .join("template.tex");
 
-    let main_fid = FileId::new(None, VirtualPath::new("/main.typ"));
-    let source = Source::new(main_fid, typst_source);
-    let world = TypstWorld::new(source);
-    let mut tracer = Tracer::new();
-    let document = typst::compile(&world, &mut tracer)
-        .map_err(|errors| format!("Typst compilation failed: {:?}", errors))?;
-    let pdf_data = typst_pdf::pdf(&document, Smart::Auto, None);
+    let template_content = fs::read_to_string(&template_path)
+        .map_err(|e| format!("Failed to read template file: {}", e))?;
 
-    Ok(pdf_data)
+    // Helper function to escape LaTeX special characters
+    fn escape_latex(s: &str) -> String {
+        s.replace('\\', "\\textbackslash{}")
+            .replace('{', "\\{")
+            .replace('}', "\\}")
+            .replace('$', "\\$")
+            .replace('&', "\\&")
+            .replace('%', "\\%")
+            .replace('#', "\\#")
+            .replace('^', "\\textasciicircum{}")
+            .replace('_', "\\_")
+            .replace('~', "\\textasciitilde{}")
+    }
+
+    // Apply escaping to all user data
+    let name = escape_latex(&resume_data.personal_info.name);
+    let email = escape_latex(&resume_data.personal_info.email);
+    let phone = escape_latex(&resume_data.personal_info.phone);
+    let website = escape_latex(&resume_data.personal_info.website);
+    let summary = escape_latex(&resume_data.personal_info.summary);
+
+    // Generate education entries
+    let education_entries = if resume_data.education.is_empty() {
+        "\\item No education information available.".to_string()
+    } else {
+        resume_data
+            .education
+            .iter()
+            .map(|edu| {
+                let degree = escape_latex(&edu.degree);
+                let institution = escape_latex(&edu.institution);
+                let dates = escape_latex(&edu.dates);
+                let details = escape_latex(&edu.details);
+
+                if degree.trim().is_empty() && institution.trim().is_empty() {
+                    return String::new();
+                }
+
+                let mut entry = format!("\\item \\textbf{{{}}}", degree);
+                if !institution.trim().is_empty() && !degree.trim().is_empty() {
+                    entry.push_str(&format!(" at \\textbf{{{}}}", institution));
+                } else if !institution.trim().is_empty() {
+                    entry = format!("\\item \\textbf{{{}}}", institution);
+                }
+
+                if !dates.trim().is_empty() {
+                    entry.push_str(&format!(" \\hfill \\textit{{{}}}", dates));
+                }
+
+                if !details.trim().is_empty() {
+                    entry.push_str(&format!("\n\\\\{}", details));
+                }
+
+                entry
+            })
+            .filter(|s| !s.is_empty())
+            .collect::<Vec<String>>()
+            .join("\n")
+    };
+
+    // Replace all placeholders in the template
+    let latex_content = template_content
+        .replace("REPLACENAME", &name)
+        .replace("REPLACEEMAIL", &email)
+        .replace("REPLACEPHONE", &phone)
+        .replace("REPLACEWEBSITE", &website)
+        .replace("REPLACESUMMARY", &summary)
+        .replace("REPLACEEDUCATION", &education_entries);
+
+    Ok(latex_content)
+}
+
+#[tauri::command]
+async fn save_latex_file(app_handle: AppHandle, resume_data_json: &str) -> Result<(), String> {
+    // Generate the LaTeX content
+    let latex_content = generate_latex(app_handle.clone(), resume_data_json).await?;
+
+    // Use the dialog to save the file
+    use tauri_plugin_dialog::{DialogExt, FilePath};
+
+    let file_path = app_handle
+        .dialog()
+        .file()
+        .set_title("Save Resume as LaTeX")
+        .add_filter("LaTeX files", &["tex"])
+        .set_file_name("resume.tex")
+        .save_file(move |file_path| {
+            if let Some(path) = file_path {
+                // Write the LaTeX content to the selected file
+                if let Some(path_ref) = path.as_path() {
+                    if let Err(e) = fs::write(path_ref, &latex_content) {
+                        eprintln!("Failed to write LaTeX file: {}", e);
+                    } else {
+                        println!("LaTeX file saved to: {:?}", path_ref);
+                    }
+                }
+            }
+        });
+
+    // Return success since the callback handles the file writing
+    Ok(())
 }
 
 // NEW: Command to save the resume data to a file.
@@ -239,10 +221,12 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         // REMOVED: The SQL plugin is no longer initialized.
         .invoke_handler(tauri::generate_handler![
             greet,
-            generate_pdf,
+            generate_latex,
+            save_latex_file,
             // ADDED: The new file-based commands are now handled.
             save_resume_data,
             load_resume_data
