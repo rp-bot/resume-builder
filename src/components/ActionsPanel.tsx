@@ -8,35 +8,36 @@ type ActionsPanelProps = {
 };
 
 export function ActionsPanel({ resumeData }: ActionsPanelProps) {
-  const handleGenerateLatex = async () => {
-    if (!resumeData) {
-      alert("No resume data available to generate LaTeX.");
+  const handleSaveLatex = async () => {
+    if (!resumeData || !resumeData.personalInfo) {
+      alert("Personal info is required to save the LaTeX file.");
       return;
     }
 
     try {
-      // Call the Rust command to save the LaTeX file
-      await invoke("save_latex_file", {
-        resumeDataJson: JSON.stringify(resumeData),
+      const { name, email } = resumeData.personalInfo;
+      await invoke("save_populated_latex", {
+        personalInfo: { name, email },
       });
       alert("LaTeX file saved successfully!");
     } catch (error) {
-      console.error("Failed to generate or save LaTeX:", error);
-      alert(`Error generating LaTeX: ${error}`);
+      console.error("Failed to save LaTeX file:", error);
+      alert(`Error saving LaTeX file: ${error}`);
     }
   };
 
   const handleGeneratePdf = async () => {
-    if (!resumeData) {
-      alert("No resume data available to generate PDF.");
+    if (!resumeData || !resumeData.personalInfo) {
+      alert("Personal info is required to generate the PDF.");
       return;
     }
 
     try {
+      const { name, email } = resumeData.personalInfo;
       await invoke("generate_pdf", {
-        resumeDataJson: JSON.stringify(resumeData),
+        personalInfo: { name, email },
       });
-      alert("PDF generated and save dialog opened!");
+      alert("PDF generated successfully!");
     } catch (error) {
       console.error("Failed to generate PDF:", error);
       alert(`Error generating PDF: ${error}`);
@@ -45,7 +46,7 @@ export function ActionsPanel({ resumeData }: ActionsPanelProps) {
 
   return (
     <div className="actions-panel">
-      <button onClick={handleGenerateLatex} className="action-button">
+      <button onClick={handleSaveLatex} className="action-button">
         Save as LaTeX
       </button>
       <button onClick={handleGeneratePdf} className="action-button">
