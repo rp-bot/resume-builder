@@ -1,6 +1,6 @@
 use std::fs;
 use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::{Path};
 use std::process::Command;
 use tauri::{AppHandle, Manager, Window};
 use tauri_plugin_dialog::{DialogExt, FilePath};

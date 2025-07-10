@@ -3,6 +3,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { save, open } from "@tauri-apps/plugin-dialog";
 import { ResumeData } from "../types/resume";
+import { Save, FolderOpen, FileDown, Upload, FileType, Printer } from "lucide-react";
 
 type ActionsPanelProps = {
   resumeData: ResumeData | null;
@@ -67,9 +68,9 @@ export function ActionsPanel({ resumeData, onDataLoad }: ActionsPanelProps) {
       const data = JSON.parse(jsonString || "{}");
       const loadedData: ResumeData = {
         personalInfo: data.personalInfo || { name: "", email: "", phone: "", website: "", summary: "" },
-        workExperience: data.workExperience || [],
-        education: data.education || [],
-        skills: data.skills || [],
+        // workExperience: data.workExperience || [],
+        // education: data.education || [],
+        // skills: data.skills || [],
       };
       onDataLoad(loadedData);
       alert("Resume data loaded successfully!");
@@ -126,9 +127,9 @@ export function ActionsPanel({ resumeData, onDataLoad }: ActionsPanelProps) {
         const data = JSON.parse(jsonString);
         const loadedData: ResumeData = {
           personalInfo: data.personalInfo || { name: "", email: "", phone: "", website: "", summary: "" },
-          workExperience: data.workExperience || [],
-          education: data.education || [],
-          skills: data.skills || [],
+          // workExperience: data.workExperience || [],
+          // education: data.education || [],
+          // skills: data.skills || [],
         };
         onDataLoad(loadedData);
         alert("Resume data loaded successfully!");
@@ -139,30 +140,45 @@ export function ActionsPanel({ resumeData, onDataLoad }: ActionsPanelProps) {
     }
   };
 
+
   return (
     <div className="actions-panel">
-      <div className="json-actions">
-        <button onClick={handleSaveJson} className="action-button">
-          Save JSON
+      {/* File Operations */}
+      <div className="toolbar-section">
+        <button onClick={handleSaveJson} className="btn-default btn-sm" title="Save (Ctrl+S)">
+          <Save className="w-4 h-4 mr-1" />
+          Save
         </button>
-        <button onClick={handleLoadJson} className="action-button">
-          Load JSON
+
+        <button onClick={handleSaveJsonAs} className="btn-default btn-sm" title="Save As... (Ctrl+Shift+S)">
+          <FileDown className="w-4 h-4 mr-1" />
+          Save As...
         </button>
-        <button onClick={handleSaveJsonAs} className="action-button">
-          Save JSON As...
+
+        <button onClick={handleLoadJson} className="btn-default btn-sm" title="Open (Ctrl+O)">
+          <FolderOpen className="w-4 h-4 mr-1" />
+          Open
         </button>
-        <button onClick={handleLoadJsonFrom} className="action-button">
-          Load JSON From...
+
+        <button onClick={handleLoadJsonFrom} className="btn-default btn-sm" title="Open From File...">
+          <Upload className="w-4 h-4 mr-1" />
+          Open From...
         </button>
       </div>
-      <div className="export-actions">
-        <button onClick={handleSaveLatex} className="action-button">
-          Save as LaTeX
+
+      {/* Export Operations */}
+      <div className="toolbar-section">
+        <button onClick={handleSaveLatex} className="btn-secondary btn-sm" title="Export as LaTeX">
+          <FileType className="w-4 h-4 mr-1" />
+          Export LaTeX
         </button>
-        <button onClick={handleGeneratePdf} className="action-button">
-          Save as PDF
+
+        <button onClick={handleGeneratePdf} className="btn-primary btn-sm" title="Export as PDF">
+          <Printer className="w-4 h-4 mr-1" />
+          Export PDF
         </button>
       </div>
+
     </div>
   );
 }
