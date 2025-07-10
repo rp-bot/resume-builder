@@ -21,6 +21,7 @@ export function ActionsPanel({ resumeData, onDataLoad }: ActionsPanelProps) {
       const { name, email, linkedin, github, website, summary } = resumeData.personalInfo;
       await invoke("save_populated_latex", {
         personalInfo: { name, email, linkedin, github, website, summary },
+        education: resumeData.education || [],
       });
       alert("LaTeX file saved successfully!");
     } catch (error) {
@@ -36,9 +37,9 @@ export function ActionsPanel({ resumeData, onDataLoad }: ActionsPanelProps) {
     }
 
     try {
-      const { name, email, linkedin, github, website, summary } = resumeData.personalInfo;
+      const { name, email } = resumeData.personalInfo;
       await invoke("generate_pdf", {
-        personalInfo: { name, email, linkedin, github, website, summary },
+        personalInfo: { name, email },
       });
       alert("PDF generated successfully!");
     } catch (error) {
@@ -67,9 +68,9 @@ export function ActionsPanel({ resumeData, onDataLoad }: ActionsPanelProps) {
       const jsonString = await invoke<string>("load_resume_data");
       const data = JSON.parse(jsonString || "{}");
       const loadedData: ResumeData = {
-          personalInfo: data.personalInfo || { name: "", email: "", linkedin: "", github: "", website: "", summary: "" },
+        personalInfo: data.personalInfo || { name: "", email: "", linkedin: "", github: "", website: "", summary: "" },
         // workExperience: data.workExperience || [],
-        // education: data.education || [],
+        education: data.education || [],
         // skills: data.skills || [],
       };
       onDataLoad(loadedData);
@@ -126,9 +127,9 @@ export function ActionsPanel({ resumeData, onDataLoad }: ActionsPanelProps) {
         const jsonString = await invoke<string>("load_resume_from_file", { filePath });
         const data = JSON.parse(jsonString);
         const loadedData: ResumeData = {
-            personalInfo: data.personalInfo || { name: "", email: "", linkedin: "", github: "", website: "", summary: "" },
+          personalInfo: data.personalInfo || { name: "", email: "", linkedin: "", github: "", website: "", summary: "" },
           // workExperience: data.workExperience || [],
-          // education: data.education || [],
+          education: data.education || [],
           // skills: data.skills || [],
         };
         onDataLoad(loadedData);
@@ -140,45 +141,40 @@ export function ActionsPanel({ resumeData, onDataLoad }: ActionsPanelProps) {
     }
   };
 
-
   return (
     <div className="actions-panel">
-      {/* File Operations */}
-      <div className="toolbar-section">
-        <button onClick={handleSaveJson} className="btn-default btn-sm" title="Save (Ctrl+S)">
-          <Save className="w-4 h-4 mr-1" />
+      <div className="actions-group">
+        <button onClick={handleSaveLatex} className="btn btn-primary" title="Save LaTeX File">
+          <FileType className="w-4 h-4" />
+          Save LaTeX
+        </button>
+        <button onClick={handleGeneratePdf} className="btn btn-secondary" title="Generate PDF">
+          <Printer className="w-4 h-4" />
+          Generate PDF
+        </button>
+      </div>
+
+      <div className="actions-group">
+        <button onClick={handleSaveJson} className="btn btn-outline" title="Save Resume Data">
+          <Save className="w-4 h-4" />
           Save
         </button>
+        <button onClick={handleLoadJson} className="btn btn-outline" title="Load Resume Data">
+          <FolderOpen className="w-4 h-4" />
+          Load
+        </button>
+      </div>
 
-        <button onClick={handleSaveJsonAs} className="btn-default btn-sm" title="Save As... (Ctrl+Shift+S)">
-          <FileDown className="w-4 h-4 mr-1" />
+      <div className="actions-group">
+        <button onClick={handleSaveJsonAs} className="btn btn-outline" title="Save Resume Data As...">
+          <FileDown className="w-4 h-4" />
           Save As...
         </button>
-
-        <button onClick={handleLoadJson} className="btn-default btn-sm" title="Open (Ctrl+O)">
-          <FolderOpen className="w-4 h-4 mr-1" />
-          Open
-        </button>
-
-        <button onClick={handleLoadJsonFrom} className="btn-default btn-sm" title="Open From File...">
-          <Upload className="w-4 h-4 mr-1" />
-          Open From...
+        <button onClick={handleLoadJsonFrom} className="btn btn-outline" title="Load Resume Data From...">
+          <Upload className="w-4 h-4" />
+          Load From...
         </button>
       </div>
-
-      {/* Export Operations */}
-      <div className="toolbar-section">
-        <button onClick={handleSaveLatex} className="btn-secondary btn-sm" title="Export as LaTeX">
-          <FileType className="w-4 h-4 mr-1" />
-          Export LaTeX
-        </button>
-
-        <button onClick={handleGeneratePdf} className="btn-primary btn-sm" title="Export as PDF">
-          <Printer className="w-4 h-4 mr-1" />
-          Export PDF
-        </button>
-      </div>
-
     </div>
   );
 }
