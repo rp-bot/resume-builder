@@ -10,6 +10,10 @@ use tokio::sync::oneshot;
 pub struct PersonalInfo {
     name: String,
     email: String,
+    linkedin: String,
+    github: String,
+    website: String,
+    summary: String,
 }
 
 #[tauri::command]
@@ -28,7 +32,11 @@ pub async fn save_populated_latex(
 
     let populated_latex = latex_template
         .replace("__NAME__", &personal_info.name)
-        .replace("__EMAIL__", &personal_info.email);
+        .replace("__EMAIL__", &personal_info.email)
+        .replace("__LINKEDIN__", &personal_info.linkedin)
+        .replace("__GITHUB__", &personal_info.github)
+        .replace("__WEBSITE__", &personal_info.website)
+        .replace("__SUMMARY__", &personal_info.summary);
 
     let result = tauri::async_runtime::spawn_blocking(move || {
         let file_path = app

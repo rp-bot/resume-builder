@@ -3,7 +3,8 @@
 export interface PersonalInformation {
     name: string;
     email: string;
-    phone: string;
+    linkedin: string;
+    github: string;
     website: string;
     summary: string;
   }

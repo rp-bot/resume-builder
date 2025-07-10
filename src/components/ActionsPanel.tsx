@@ -18,9 +18,9 @@ export function ActionsPanel({ resumeData, onDataLoad }: ActionsPanelProps) {
     }
 
     try {
-      const { name, email } = resumeData.personalInfo;
+      const { name, email, linkedin, github, website, summary } = resumeData.personalInfo;
       await invoke("save_populated_latex", {
-        personalInfo: { name, email },
+        personalInfo: { name, email, linkedin, github, website, summary },
       });
       alert("LaTeX file saved successfully!");
     } catch (error) {
@@ -36,9 +36,9 @@ export function ActionsPanel({ resumeData, onDataLoad }: ActionsPanelProps) {
     }
 
     try {
-      const { name, email } = resumeData.personalInfo;
+      const { name, email, linkedin, github, website, summary } = resumeData.personalInfo;
       await invoke("generate_pdf", {
-        personalInfo: { name, email },
+        personalInfo: { name, email, linkedin, github, website, summary },
       });
       alert("PDF generated successfully!");
     } catch (error) {
@@ -67,7 +67,7 @@ export function ActionsPanel({ resumeData, onDataLoad }: ActionsPanelProps) {
       const jsonString = await invoke<string>("load_resume_data");
       const data = JSON.parse(jsonString || "{}");
       const loadedData: ResumeData = {
-        personalInfo: data.personalInfo || { name: "", email: "", phone: "", website: "", summary: "" },
+          personalInfo: data.personalInfo || { name: "", email: "", linkedin: "", github: "", website: "", summary: "" },
         // workExperience: data.workExperience || [],
         // education: data.education || [],
         // skills: data.skills || [],
@@ -126,7 +126,7 @@ export function ActionsPanel({ resumeData, onDataLoad }: ActionsPanelProps) {
         const jsonString = await invoke<string>("load_resume_from_file", { filePath });
         const data = JSON.parse(jsonString);
         const loadedData: ResumeData = {
-          personalInfo: data.personalInfo || { name: "", email: "", phone: "", website: "", summary: "" },
+            personalInfo: data.personalInfo || { name: "", email: "", linkedin: "", github: "", website: "", summary: "" },
           // workExperience: data.workExperience || [],
           // education: data.education || [],
           // skills: data.skills || [],

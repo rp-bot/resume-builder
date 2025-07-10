@@ -13,7 +13,7 @@ function App() {
       .then((jsonString) => {
         const data = JSON.parse(jsonString || "{}");
         setResumeData({
-          personalInfo: data.personalInfo || { name: "", email: "", phone: "", website: "", summary: "" },
+            personalInfo: data.personalInfo || { name: "", email: "", linkedin: "", github: "", website: "", summary: "" },
           // workExperience: data.workExperience || [],
           // education: data.education || [],
           // skills: data.skills || [],
@@ -115,21 +115,33 @@ function App() {
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="phone" className="form-label">
-                    Phone Number
+                  <label htmlFor="linkedin" className="form-label">
+                    LinkedIn
                   </label>
                   <input
-                    id="phone"
-                    type="tel"
-                    name="phone"
-                    placeholder="+1 (555) 123-4567"
-                    value={resumeData.personalInfo.phone}
+                      id="linkedin"
+                    type="url"
+                    name="linkedin"
+                    placeholder="https://linkedin.com/in/yourprofile"
+                    value={resumeData.personalInfo.linkedin}
                     onChange={handlePersonalInfoChange}
                     className="form-input"
                   />
                 </div>
 
                 <div className="form-group">
+                  <label htmlFor="github" className="form-label">
+                    GitHub
+                  </label>
+                  <input
+                    id="github"
+                    type="url"
+                    name="github"
+                    placeholder="https://github.com/yourusername"
+                    value={resumeData.personalInfo.github}
+                    onChange={handlePersonalInfoChange}
+                    className="form-input"
+                  />
                   <label htmlFor="website" className="form-label">
                     Website/Portfolio
                   </label>
