@@ -359,3 +359,61 @@ button:hover {
   color: #c53030;
   border: 1px solid #fbcaca;
 }
+
+.actions-panel {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+}
+
+.json-actions,
+.export-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.json-actions {
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 1rem;
+}
+
+.action-button {
+  background-color: #646cff;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9em;
+  font-weight: 500;
+  transition: background-color 0.25s, transform 0.1s;
+}
+
+.action-button:hover {
+  background-color: #5a5fcf;
+  transform: translateY(-1px);
+}
+
+.action-button:active {
+  transform: translateY(0);
+}
+
+.json-actions .action-button {
+  background-color: #4caf50;
+}
+
+.json-actions .action-button:hover {
+  background-color: #45a049;
+}
+
+.export-actions .action-button {
+  background-color: #ff9800;
+}
+
+.export-actions .action-button:hover {
+  background-color: #f57c00;
+}

@@ -44,6 +44,10 @@ function App() {
     });
   };
 
+  const handleDataLoad = (data: ResumeData) => {
+    setResumeData(data);
+  };
+
   if (!resumeData) {
     return <div>Loading...</div>;
   }
@@ -52,7 +56,7 @@ function App() {
     <div className="container">
       <header>
         <h1>Resume Builder</h1>
-        <ActionsPanel resumeData={resumeData} />
+        <ActionsPanel resumeData={resumeData} onDataLoad={handleDataLoad} />
       </header>
 
       <main>

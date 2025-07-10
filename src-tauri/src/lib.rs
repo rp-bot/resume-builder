@@ -10,7 +10,9 @@ pub fn run() {
             commands::resume::save_populated_latex,
             commands::resume::generate_pdf,
             commands::file::save_resume_data,
-            commands::file::load_resume_data
+            commands::file::load_resume_data,
+            commands::file::save_resume_to_file,
+            commands::file::load_resume_from_file
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

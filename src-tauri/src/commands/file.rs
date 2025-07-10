@@ -32,3 +32,19 @@ pub async fn load_resume_data(app_handle: AppHandle) -> Result<String, String> {
         Ok("{}".to_string())
     }
 }
+
+#[tauri::command]
+pub async fn save_resume_to_file(file_path: String, data: String) -> Result<(), String> {
+    fs::write(&file_path, data)
+        .map_err(|e| format!("Failed to write to file {}: {}", file_path, e))?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn load_resume_from_file(file_path: String) -> Result<String, String> {
+    if !std::path::Path::new(&file_path).exists() {
+        return Err(format!("File does not exist: {}", file_path));
+    }
+
+    fs::read_to_string(&file_path).map_err(|e| format!("Failed to read file {}: {}", file_path, e))
+}
