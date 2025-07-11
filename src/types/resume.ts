@@ -28,15 +28,17 @@ export interface Education
   coursework: string;
 }
 
-// export interface Skill {
-//   id: string; // Use for React's `key` prop
-//   name: string;
-// }
+export interface SkillCategory
+{
+  id: string; // Use for React's `key` prop
+  name: string;
+  skills: string;
+}
 
 export interface ResumeData
 {
   personalInfo: PersonalInformation;
   // workExperience: WorkExperience[];
   education: Education[];
-  // skills: Skill[];
+  skills: SkillCategory[];
 }

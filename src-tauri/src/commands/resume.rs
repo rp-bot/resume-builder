@@ -25,6 +25,12 @@ pub struct Education {
     coursework: String,
 }
 
+#[derive(serde::Deserialize, Clone)]
+pub struct SkillCategory {
+    name: String,
+    skills: String,
+}
+
 #[tauri::command]
 pub async fn save_populated_latex(
     app: AppHandle,
@@ -60,6 +66,57 @@ pub async fn save_populated_latex(
             .join("\n    ")
     };
 
+    // Hard-coded skills data - structured for easy future parameterization
+    let skills = vec![
+        SkillCategory {
+            name: "Programming Languages".to_string(),
+            skills: r#"\textbf{Python}, \textbf{C++}, \textbf{Rust}, JavaScript, \textbf{TypeScript}, Java, SQL"#.to_string(),
+        },
+        SkillCategory {
+            name: "Programming Paradigms".to_string(),
+            skills: r#"Object-Oriented Programming \textbf{(OOP)}"#.to_string(),
+        },
+        SkillCategory {
+            name: "Relevant Coursework".to_string(),
+            skills: "Data Structures and Algorithms, Operating Systems, Computer Architecture, Software Engineering, Machine Learning, AI, Computer Networks, Database Systems, Linear Algebra, Calculus.".to_string(),
+        },
+        SkillCategory {
+            name: "Frameworks & Technologies".to_string(),
+            skills: "NextJS, React, React Native, Vue.js, Three.js, NodeJS, PyTorch".to_string(),
+        },
+        SkillCategory {
+            name: "Audio & Music".to_string(),
+            skills: r#"\textbf{Digital Signal Processing}, Max/MSP, \textbf{JUCE}, music21, Plugin Development"#.to_string(),
+        },
+        SkillCategory {
+            name: "Data & ML".to_string(),
+            skills: r#"Machine Learning, \textbf{Transformer Architecture}, \textbf{CUDA}, \textbf{GPU Acceleration}, Computer Vision"#.to_string(),
+        },
+        SkillCategory {
+            name: "IoT & Hardware".to_string(),
+            skills: "Arduino, Raspberry Pi, Sensor Integration, Wi-Fi Communication".to_string(),
+        },
+        SkillCategory {
+            name: "Infrastructure".to_string(),
+            skills: r#"Git, CI/CD pipelining, Linux, macOS, Supabase, \textbf{Firebase}, \textbf{AWS}, GCP, \textbf{Terraform}, CDN, Cloudflare Tunnels, \textbf{AI Agents}"#.to_string(),
+        },
+    ];
+
+    // Generate LaTeX string for skills from the hard-coded data
+    let skills_latex = skills
+        .iter()
+        .enumerate()
+        .map(|(index, skill)| {
+            let separator = if index == skills.len() - 1 {
+                "" // No [2pt] for the last item
+            } else {
+                "\\\\[2pt]" // Add [2pt] for all other items
+            };
+            format!("\\textbf{{{}:}} {}{}", skill.name, skill.skills, separator)
+        })
+        .collect::<Vec<String>>()
+        .join("\n      ");
+
     let populated_latex = latex_template
         .replace("__NAME__", &personal_info.name)
         .replace("__EMAIL__", &personal_info.email)
@@ -67,7 +124,8 @@ pub async fn save_populated_latex(
         .replace("__GITHUB__", &personal_info.github)
         .replace("__WEBSITE__", &personal_info.website)
         .replace("__SUMMARY__", &personal_info.summary)
-        .replace("__EDUCATION_LIST_ITEM__", &education_latex);
+        .replace("__EDUCATION_LIST_ITEM__", &education_latex)
+        .replace("__SKILLS__", &skills_latex);
 
     let result = tauri::async_runtime::spawn_blocking(move || {
         let file_path = app
@@ -150,10 +208,10 @@ pub async fn generate_pdf(window: Window) -> Result<(), String> {
 /// A standard, synchronous function to run the command.
 /// This will be executed on the blocking thread pool.
 fn run_pdflatex_blocking(input_path: &Path, output_dir: &Path) -> Result<(), String> {
-    let file_name = input_path
-        .file_name()
-        .and_then(|name| name.to_str())
-        .ok_or_else(|| "Failed to get file name.".to_string())?;
+    // let file_name = input_path
+    //     .file_name()
+    //     .and_then(|name| name.to_str())
+    //     .ok_or_else(|| "Failed to get file name.".to_string())?;
 
     // Change to the directory containing the input file so relative paths work
     let input_dir = input_path.parent().unwrap_or_else(|| Path::new("."));

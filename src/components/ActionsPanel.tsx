@@ -71,7 +71,7 @@ export function ActionsPanel({ resumeData, onDataLoad }: ActionsPanelProps) {
         personalInfo: data.personalInfo || { name: "", email: "", linkedin: "", github: "", website: "", summary: "" },
         // workExperience: data.workExperience || [],
         education: data.education || [],
-        // skills: data.skills || [],
+        skills: data.skills || [],
       };
       onDataLoad(loadedData);
       alert("Resume data loaded successfully!");
@@ -130,7 +130,7 @@ export function ActionsPanel({ resumeData, onDataLoad }: ActionsPanelProps) {
           personalInfo: data.personalInfo || { name: "", email: "", linkedin: "", github: "", website: "", summary: "" },
           // workExperience: data.workExperience || [],
           education: data.education || [],
-          // skills: data.skills || [],
+          skills: data.skills || [],
         };
         onDataLoad(loadedData);
         alert("Resume data loaded successfully!");
