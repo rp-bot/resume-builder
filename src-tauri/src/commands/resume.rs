@@ -36,6 +36,7 @@ pub async fn save_populated_latex(
     app: AppHandle,
     personal_info: PersonalInfo,
     education: Vec<Education>,
+    skills: Vec<SkillCategory>,
 ) -> Result<(), String> {
     // Resolve the path to the template file
     let resource_path = app
@@ -66,56 +67,44 @@ pub async fn save_populated_latex(
             .join("\n    ")
     };
 
-    // Hard-coded skills data - structured for easy future parameterization
-    let skills = vec![
-        SkillCategory {
-            name: "Programming Languages".to_string(),
-            skills: r#"\textbf{Python}, \textbf{C++}, \textbf{Rust}, JavaScript, \textbf{TypeScript}, Java, SQL"#.to_string(),
-        },
-        SkillCategory {
-            name: "Programming Paradigms".to_string(),
-            skills: r#"Object-Oriented Programming \textbf{(OOP)}"#.to_string(),
-        },
-        SkillCategory {
-            name: "Relevant Coursework".to_string(),
-            skills: "Data Structures and Algorithms, Operating Systems, Computer Architecture, Software Engineering, Machine Learning, AI, Computer Networks, Database Systems, Linear Algebra, Calculus.".to_string(),
-        },
-        SkillCategory {
-            name: "Frameworks & Technologies".to_string(),
-            skills: "NextJS, React, React Native, Vue.js, Three.js, NodeJS, PyTorch".to_string(),
-        },
-        SkillCategory {
-            name: "Audio & Music".to_string(),
-            skills: r#"\textbf{Digital Signal Processing}, Max/MSP, \textbf{JUCE}, music21, Plugin Development"#.to_string(),
-        },
-        SkillCategory {
-            name: "Data & ML".to_string(),
-            skills: r#"Machine Learning, \textbf{Transformer Architecture}, \textbf{CUDA}, \textbf{GPU Acceleration}, Computer Vision"#.to_string(),
-        },
-        SkillCategory {
-            name: "IoT & Hardware".to_string(),
-            skills: "Arduino, Raspberry Pi, Sensor Integration, Wi-Fi Communication".to_string(),
-        },
-        SkillCategory {
-            name: "Infrastructure".to_string(),
-            skills: r#"Git, CI/CD pipelining, Linux, macOS, Supabase, \textbf{Firebase}, \textbf{AWS}, GCP, \textbf{Terraform}, CDN, Cloudflare Tunnels, \textbf{AI Agents}"#.to_string(),
-        },
-    ];
+    // Generate LaTeX string for skills from the provided data
+    let skills_latex = if skills.is_empty() {
+        "% No skills entries provided".to_string()
+    } else {
+        skills
+            .iter()
+            .enumerate()
+            .map(|(index, skill)| {
+                let separator = if index == skills.len() - 1 {
+                    "" // No [2pt] for the last item
+                } else {
+                    "\\\\[2pt]" // Add [2pt] for all other items
+                };
 
-    // Generate LaTeX string for skills from the hard-coded data
-    let skills_latex = skills
-        .iter()
-        .enumerate()
-        .map(|(index, skill)| {
-            let separator = if index == skills.len() - 1 {
-                "" // No [2pt] for the last item
-            } else {
-                "\\\\[2pt]" // Add [2pt] for all other items
-            };
-            format!("\\textbf{{{}:}} {}{}", skill.name, skill.skills, separator)
-        })
-        .collect::<Vec<String>>()
-        .join("\n      ");
+                // Convert markdown bold (**word**) to LaTeX bold (\textbf{word})
+                let converted_skills = skill
+                    .skills
+                    .split("**")
+                    .enumerate()
+                    .map(|(i, part)| {
+                        if i % 2 == 1 {
+                            // This is inside **bold** tags
+                            format!("\\textbf{{{}}}", part)
+                        } else {
+                            // This is regular text
+                            part.to_string()
+                        }
+                    })
+                    .collect::<String>();
+
+                format!(
+                    "\\textbf{{{}:}} {}{}",
+                    skill.name, converted_skills, separator
+                )
+            })
+            .collect::<Vec<String>>()
+            .join("\n      ")
+    };
 
     let populated_latex = latex_template
         .replace("__NAME__", &personal_info.name)

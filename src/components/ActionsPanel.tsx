@@ -22,6 +22,7 @@ export function ActionsPanel({ resumeData, onDataLoad }: ActionsPanelProps) {
       await invoke("save_populated_latex", {
         personalInfo: { name, email, linkedin, github, website, summary },
         education: resumeData.education || [],
+        skills: resumeData.skills || [],
       });
       alert("LaTeX file saved successfully!");
     } catch (error) {
