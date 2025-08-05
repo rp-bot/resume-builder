@@ -1,3 +1,4 @@
+use base64::Engine;
 use std::fs;
 use std::io::Write;
 use std::path::Path;
@@ -194,6 +195,153 @@ pub async fn generate_pdf(window: Window) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+pub async fn save_populated_temp_latex(
+    app: AppHandle,
+    personal_info: PersonalInfo,
+    education: Vec<Education>,
+    skills: Vec<SkillCategory>,
+) -> Result<(), String> {
+    // Resolve the path to the template file
+    let resource_path = app
+        .path()
+        .resolve("template.tex", tauri::path::BaseDirectory::Resource)
+        .map_err(|e| format!("Failed to resolve resource path: {}", e))?;
+
+    let latex_template = fs::read_to_string(resource_path)
+        .map_err(|e| format!("Failed to read template file: {}", e))?;
+
+    // Generate LaTeX string for education items from the provided data
+    let education_latex = if education.is_empty() {
+        "% No education entries provided".to_string()
+    } else {
+        education
+            .iter()
+            .map(|edu| {
+                format!(
+                    "\\resumeEducationHeading\n      {{{}}}{{{} $|$ {}}}\n      {{{}\\footnotesize{{}}}}{{\\textbf{{Relevant Coursework:}} {}}}",
+                    edu.school,
+                    edu.location,
+                    edu.date,
+                    edu.degree,
+                    edu.coursework
+                )
+            })
+            .collect::<Vec<String>>()
+            .join("\n    ")
+    };
+
+    // Generate LaTeX string for skills from the provided data
+    let skills_latex = if skills.is_empty() {
+        "% No skills entries provided".to_string()
+    } else {
+        skills
+            .iter()
+            .enumerate()
+            .map(|(index, skill)| {
+                let separator = if index == skills.len() - 1 {
+                    "" // No [2pt] for the last item
+                } else {
+                    "\\\\[2pt]" // Add [2pt] for all other items
+                };
+
+                // Convert markdown bold (**word**) to LaTeX bold (\textbf{word})
+                let converted_skills = skill
+                    .skills
+                    .split("**")
+                    .enumerate()
+                    .map(|(i, part)| {
+                        if i % 2 == 1 {
+                            // This is inside **bold** tags
+                            format!("\\textbf{{{}}}", part)
+                        } else {
+                            // This is regular text
+                            part.to_string()
+                        }
+                    })
+                    .collect::<String>();
+
+                format!(
+                    "\\textbf{{{}:}} {}{}",
+                    skill.name, converted_skills, separator
+                )
+            })
+            .collect::<Vec<String>>()
+            .join("\n      ")
+    };
+
+    let populated_latex = latex_template
+        .replace("__NAME__", &personal_info.name)
+        .replace("__EMAIL__", &personal_info.email)
+        .replace("__LINKEDIN__", &personal_info.linkedin)
+        .replace("__GITHUB__", &personal_info.github)
+        .replace("__WEBSITE__", &personal_info.website)
+        .replace("__SUMMARY__", &personal_info.summary)
+        .replace("__EDUCATION_LIST_ITEM__", &education_latex)
+        .replace("__SKILLS__", &skills_latex);
+
+    // Save to the current working directory (./temp.tex)
+    let temp_tex_path = Path::new("../temp/temp.tex");
+
+    let result = tauri::async_runtime::spawn_blocking(move || {
+        let mut file = fs::File::create(&temp_tex_path)
+            .map_err(|e| format!("Failed to create temp.tex file: {}", e))?;
+        file.write_all(populated_latex.as_bytes())
+            .map_err(|e| format!("Failed to write to temp.tex file: {}", e))?;
+        Ok(())
+    })
+    .await;
+
+    result.map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+pub async fn refresh_temp_view(
+    app: AppHandle,
+    personal_info: PersonalInfo,
+    education: Vec<Education>,
+    skills: Vec<SkillCategory>,
+) -> Result<String, String> {
+    // First, save the populated LaTeX to temp.tex
+    save_populated_temp_latex(app.clone(), personal_info, education, skills).await?;
+
+    // Save to the current working directory (./temp.tex and ./temp.pdf)
+    let temp_tex_path = Path::new("../temp/temp.tex");
+    let current_dir = Path::new("../temp");
+
+    // Run pdflatex to generate temp.pdf in the same directory
+    let result = tauri::async_runtime::spawn_blocking(move || {
+        run_pdflatex_blocking(&temp_tex_path, &current_dir)
+    })
+    .await;
+
+    result
+        .map_err(|e| format!("Task join error: {}", e))?
+        .map_err(|e| format!("pdflatex execution error: {}", e))?;
+
+    // Return the absolute path to ./temp.pdf
+    let temp_pdf_path = current_dir.join("temp.pdf");
+    let abs_path = std::fs::canonicalize(&temp_pdf_path)
+        .map_err(|e| format!("Failed to get absolute path for temp.pdf: {}", e))?;
+    Ok(abs_path.to_string_lossy().to_string())
+}
+
+#[tauri::command]
+pub async fn get_temp_pdf_data() -> Result<String, String> {
+    let temp_pdf_path = Path::new("../temp/temp.pdf");
+
+    if !temp_pdf_path.exists() {
+        return Err("temp.pdf file does not exist".to_string());
+    }
+
+    let pdf_bytes =
+        fs::read(temp_pdf_path).map_err(|e| format!("Failed to read temp.pdf: {}", e))?;
+
+    // Convert to base64
+    let base64_string = base64::engine::general_purpose::STANDARD.encode(&pdf_bytes);
+    Ok(base64_string)
+}
+
 /// A standard, synchronous function to run the command.
 /// This will be executed on the blocking thread pool.
 fn run_pdflatex_blocking(input_path: &Path, output_dir: &Path) -> Result<(), String> {
@@ -220,6 +368,5 @@ fn run_pdflatex_blocking(input_path: &Path, output_dir: &Path) -> Result<(), Str
         return Err(format!("pdflatex failed. Error: {}", stderr));
     }
 
-    println!("PDF generated successfully in {:?}!", output_dir);
     Ok(())
 }

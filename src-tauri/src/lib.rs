@@ -8,6 +8,9 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             commands::resume::save_populated_latex,
+            commands::resume::save_populated_temp_latex,
+            commands::resume::refresh_temp_view,
+            commands::resume::get_temp_pdf_data,
             commands::resume::generate_pdf,
             commands::file::save_resume_data,
             commands::file::load_resume_data,

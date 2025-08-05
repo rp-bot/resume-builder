@@ -1,0 +1,103 @@
+name: Code Signing
+
+on:
+  workflow_run:
+    workflows: ["Release"]
+    types:
+      - completed
+    branches: [main]
+
+jobs:
+  sign-windows:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: windows-latest
+    steps:
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-x64
+          path: ./windows-artifacts
+
+      - name: Setup code signing certificate
+        if: secrets.WINDOWS_CERTIFICATE_PASSWORD != ''
+        uses: actions/setup-code-signing@v1
+        with:
+          certificate: ${{ secrets.WINDOWS_CERTIFICATE }}
+          certificate-password: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+
+      - name: Sign Windows executables
+        if: secrets.WINDOWS_CERTIFICATE_PASSWORD != ''
+        run: |
+          # Sign the NSIS installer
+          if (Test-Path "./windows-artifacts/*.exe") {
+            Get-ChildItem "./windows-artifacts/*.exe" | ForEach-Object {
+              Write-Host "Signing $($_.Name)"
+              signtool sign /f $env:CERTIFICATE_PATH /p $env:CERTIFICATE_PASSWORD /tr http://timestamp.digicert.com /td sha256 /fd sha256 $_.FullName
+            }
+          }
+
+      - name: Upload signed Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-x64-signed
+          path: ./windows-artifacts
+          retention-days: 30
+
+  sign-macos:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: macos-latest
+    steps:
+      - name: Download macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-x64
+          path: ./macos-artifacts
+
+      - name: Setup code signing
+        if: secrets.MACOS_APPLE_ID != ''
+        uses: apple-actions/import-codesigning-certs@v1
+        with:
+          p12-file-base64: ${{ secrets.MACOS_CERTIFICATE }}
+          p12-password: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+
+      - name: Sign macOS app
+        if: secrets.MACOS_APPLE_ID != ''
+        run: |
+          # Sign the app bundle
+          if [ -d "./macos-artifacts/*.app" ]; then
+            for app in ./macos-artifacts/*.app; do
+              echo "Signing $app"
+              codesign --force --sign "Developer ID Application" --timestamp "$app"
+            done
+          fi
+
+      - name: Notarize macOS app
+        if: secrets.MACOS_APPLE_ID != ''
+        run: |
+          # Create a temporary zip for notarization
+          if [ -d "./macos-artifacts/*.app" ]; then
+            for app in ./macos-artifacts/*.app; do
+              echo "Notarizing $app"
+              ditto -c -k --keepParent "$app" "${app}.zip"
+              
+              # Submit for notarization
+              xcrun notarytool submit "${app}.zip" \
+                --apple-id "${{ secrets.MACOS_APPLE_ID }}" \
+                --password "${{ secrets.MACOS_APPLE_ID_PASSWORD }}" \
+                --team-id "${{ secrets.MACOS_TEAM_ID }}" \
+                --wait
+              
+              # Staple the notarization ticket
+              xcrun stapler staple "$app"
+              
+              # Clean up
+              rm "${app}.zip"
+            done
+          fi
+
+      - name: Upload signed macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-x64-signed
+          path: ./macos-artifacts
+          retention-days: 30

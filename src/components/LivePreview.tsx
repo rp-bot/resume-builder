@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { ResumeData } from "../types/resume";
 
 interface LivePreviewProps {
@@ -10,19 +11,30 @@ export const LivePreview: React.FC<LivePreviewProps> = ({ resumeData }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Cleanup blob URL when component unmounts or pdfUrl changes
+  useEffect(() => {
+    return () => {
+      if (pdfUrl && pdfUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(pdfUrl);
+      }
+    };
+  }, [pdfUrl]);
+
   useEffect(() => {
     // Check if PDF exists
     const checkPdf = async () => {
       try {
-        const response = await fetch("/src/assets/temp.pdf");
-        if (response.ok) {
-          setPdfUrl("/src/assets/temp.pdf");
-          setError(null);
-        } else {
-          setError("PDF not found. Generate a resume to see the preview.");
-        }
+        const pdfBase64 = await invoke<string>("get_temp_pdf_data");
+
+        // Convert base64 to blob URL
+        const pdfBytes = Uint8Array.from(atob(pdfBase64), (c) => c.charCodeAt(0));
+        const blob = new Blob([pdfBytes], { type: "application/pdf" });
+        const blobUrl = URL.createObjectURL(blob);
+
+        setPdfUrl(blobUrl);
+        setError(null);
       } catch (err) {
-        setError("Failed to load PDF. The resume PDF will appear here once generated.");
+        setError("PDF not found. Generate a resume to see the preview.");
       } finally {
         setLoading(false);
       }
@@ -31,12 +43,45 @@ export const LivePreview: React.FC<LivePreviewProps> = ({ resumeData }) => {
     checkPdf();
   }, [resumeData]); // Re-check when resume data changes
 
-  const refreshPreview = () => {
+  const refreshPreview = async () => {
+    if (!resumeData || !resumeData.personalInfo) {
+      setError("Personal info is required to generate the preview.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
-    // Add timestamp to force reload
-    setPdfUrl(`/src/assets/temp.pdf?t=${Date.now()}`);
-    setLoading(false);
+
+    try {
+      const { name, email, linkedin, github, website, summary } = resumeData.personalInfo;
+
+      // First, generate the PDF
+      await invoke<string>("refresh_temp_view", {
+        personalInfo: { name, email, linkedin, github, website, summary },
+        education: resumeData.education || [],
+        skills: resumeData.skills || [],
+      });
+
+      // Then, get the PDF data as base64
+      const pdfBase64 = await invoke<string>("get_temp_pdf_data");
+
+      // Clean up old blob URL if it exists
+      if (pdfUrl && pdfUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(pdfUrl);
+      }
+
+      // Convert base64 to blob URL
+      const pdfBytes = Uint8Array.from(atob(pdfBase64), (c) => c.charCodeAt(0));
+      const blob = new Blob([pdfBytes], { type: "application/pdf" });
+      const blobUrl = URL.createObjectURL(blob);
+
+      setPdfUrl(blobUrl);
+      setLoading(false);
+    } catch (error) {
+      console.error("Failed to refresh preview:", error);
+      setError(`Error generating preview: ${error}`);
+      setLoading(false);
+    }
   };
 
   return (
@@ -72,7 +117,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({ resumeData }) => {
                   </svg>
                 </div>
                 <p className="text-orange-600 font-medium">{error}</p>
-                <p className="text-gray-500 text-sm mt-1">Click "Generate PDF" to create your resume.</p>
+                <p className="text-gray-500 text-sm mt-1">Click "Refresh" to generate your resume.</p>
               </div>
             </div>
           )}
