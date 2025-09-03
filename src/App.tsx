@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { ResumeData, Education, SkillCategory } from "./types/resume";
-import { ActionsPanel, LivePreview, PersonalInfoForm, EducationForm, SkillsForm } from "./components";
+import { ResumeData, Education, SkillCategory, WorkExperience } from "./types/resume";
+import { ActionsPanel, LivePreview, PersonalInfoForm, WorkExperienceForm, EducationForm, SkillsForm } from "./components";
 import "./App.css";
 
 function App() {
@@ -13,7 +13,7 @@ function App() {
         const data = JSON.parse(jsonString || "{}");
         setResumeData({
           personalInfo: data.personalInfo || { name: "", email: "", linkedin: "", github: "", website: "", summary: "" },
-          // workExperience: data.workExperience || [],
+          workExperience: data.workExperience || [],
           education: data.education || [],
           skills: data.skills || [],
         });
@@ -41,6 +41,89 @@ function App() {
           ...prev.personalInfo,
           [name]: value,
         },
+      };
+    });
+  };
+
+  const handleWorkExperienceChange = (index: number, field: keyof WorkExperience, value: string | string[]) => {
+    setResumeData((prev) => {
+      if (!prev) return null;
+      const newWorkExperience = [...prev.workExperience];
+      newWorkExperience[index] = {
+        ...newWorkExperience[index],
+        [field]: value,
+      };
+      return {
+        ...prev,
+        workExperience: newWorkExperience,
+      };
+    });
+  };
+
+  const addWorkExperience = () => {
+    setResumeData((prev) => {
+      if (!prev) return null;
+      const newWorkExperience: WorkExperience = {
+        id: `work-${Date.now()}`,
+        company: "",
+        role: "",
+        location: "",
+        dates: "",
+        descriptionItems: [],
+      };
+      return {
+        ...prev,
+        workExperience: [...prev.workExperience, newWorkExperience],
+      };
+    });
+  };
+
+  const removeWorkExperience = (index: number) => {
+    setResumeData((prev) => {
+      if (!prev) return null;
+      const newWorkExperience = prev.workExperience.filter((_, i) => i !== index);
+      return {
+        ...prev,
+        workExperience: newWorkExperience,
+      };
+    });
+  };
+
+  const addDescriptionItem = (workIndex: number) => {
+    setResumeData((prev) => {
+      if (!prev) return null;
+      const newWorkExperience = [...prev.workExperience];
+      if (!newWorkExperience[workIndex].descriptionItems) {
+        newWorkExperience[workIndex].descriptionItems = [];
+      }
+      newWorkExperience[workIndex].descriptionItems.push("");
+      return {
+        ...prev,
+        workExperience: newWorkExperience,
+      };
+    });
+  };
+
+  const removeDescriptionItem = (workIndex: number, itemIndex: number) => {
+    setResumeData((prev) => {
+      if (!prev) return null;
+      const newWorkExperience = [...prev.workExperience];
+      newWorkExperience[workIndex].descriptionItems.splice(itemIndex, 1);
+      return {
+        ...prev,
+        workExperience: newWorkExperience,
+      };
+    });
+  };
+
+  const handleDescriptionItemChange = (workIndex: number, itemIndex: number, value: string) => {
+    setResumeData((prev) => {
+      if (!prev) return null;
+      const newWorkExperience = [...prev.workExperience];
+      newWorkExperience[workIndex].descriptionItems[itemIndex] = value;
+      return {
+        ...prev,
+        workExperience: newWorkExperience,
       };
     });
   };
@@ -164,6 +247,16 @@ function App() {
           {/* Form Section */}
           <div className="form-container">
             <PersonalInfoForm personalInfo={resumeData.personalInfo} onChange={handlePersonalInfoChange} />
+
+            <WorkExperienceForm
+              workExperience={resumeData.workExperience}
+              onWorkExperienceChange={handleWorkExperienceChange}
+              onAddWorkExperience={addWorkExperience}
+              onRemoveWorkExperience={removeWorkExperience}
+              onAddDescriptionItem={addDescriptionItem}
+              onRemoveDescriptionItem={removeDescriptionItem}
+              onDescriptionItemChange={handleDescriptionItemChange}
+            />
 
             <EducationForm
               education={resumeData.education}

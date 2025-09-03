@@ -21,6 +21,7 @@ export function ActionsPanel({ resumeData, onDataLoad }: ActionsPanelProps) {
       const { name, email, linkedin, github, website, summary } = resumeData.personalInfo;
       await invoke("save_populated_latex", {
         personalInfo: { name, email, linkedin, github, website, summary },
+        workExperience: resumeData.workExperience || [],
         education: resumeData.education || [],
         skills: resumeData.skills || [],
       });
@@ -70,7 +71,7 @@ export function ActionsPanel({ resumeData, onDataLoad }: ActionsPanelProps) {
       const data = JSON.parse(jsonString || "{}");
       const loadedData: ResumeData = {
         personalInfo: data.personalInfo || { name: "", email: "", linkedin: "", github: "", website: "", summary: "" },
-        // workExperience: data.workExperience || [],
+        workExperience: data.workExperience || [],
         education: data.education || [],
         skills: data.skills || [],
       };
@@ -129,7 +130,7 @@ export function ActionsPanel({ resumeData, onDataLoad }: ActionsPanelProps) {
         const data = JSON.parse(jsonString);
         const loadedData: ResumeData = {
           personalInfo: data.personalInfo || { name: "", email: "", linkedin: "", github: "", website: "", summary: "" },
-          // workExperience: data.workExperience || [],
+          workExperience: data.workExperience || [],
           education: data.education || [],
           skills: data.skills || [],
         };

@@ -25,7 +25,14 @@ pub struct Education {
     degree: String,
     coursework: String,
 }
-
+#[derive(serde::Deserialize, Clone)]
+pub struct WorkExperience {
+    company: String,
+    role: String,
+    location: String,
+    dates: String,
+    description_items: Vec<String>,
+}
 #[derive(serde::Deserialize, Clone)]
 pub struct SkillCategory {
     name: String,
@@ -36,6 +43,7 @@ pub struct SkillCategory {
 pub async fn save_populated_latex(
     app: AppHandle,
     personal_info: PersonalInfo,
+    work_experience: Vec<WorkExperience>,
     education: Vec<Education>,
     skills: Vec<SkillCategory>,
 ) -> Result<(), String> {
@@ -67,6 +75,40 @@ pub async fn save_populated_latex(
             .collect::<Vec<String>>()
             .join("\n    ")
     };
+
+    // Generate LaTeX string for work experience items from the provided data
+    let work_experience_latex = if work_experience.is_empty() {
+        "% No work experience entries provided".to_string()
+    } else {
+        work_experience
+            .iter()
+            .map(|exp| {
+                format!(
+                    "\\resumeSubHeadingListStart\n  \\resumeSubheading\n      {{{}}}{{{} $|$ {}}}\n      {{{}}}\n      \\resumeItemListStart\n        {}\n      \\resumeItemListEnd\n\\resumeSubHeadingListEnd",
+                    exp.company,
+                    exp.location,
+                    exp.dates,
+                    exp.role,
+                    exp.description_items.iter().map(|item| {
+                        let converted_item = item
+                            .split("**")
+                            .enumerate()
+                            .map(|(i, part)| {
+                                if i % 2 == 1 {
+                                    format!("\\textbf{{{}}}", part)
+                                } else {
+                                    part.to_string()
+                                }
+                            })
+                            .collect::<String>();
+                        format!("        \\resumeItem{{{}}}", converted_item)
+                    }).collect::<Vec<String>>().join("\n        ")
+                )
+            })
+            .collect::<Vec<String>>()
+            .join("\n    ")
+    };
+    println!("Work Experience LaTeX:\n{}", work_experience_latex);
 
     // Generate LaTeX string for skills from the provided data
     let skills_latex = if skills.is_empty() {
@@ -115,6 +157,7 @@ pub async fn save_populated_latex(
         .replace("__WEBSITE__", &personal_info.website)
         .replace("__SUMMARY__", &personal_info.summary)
         .replace("__EDUCATION_LIST_ITEM__", &education_latex)
+        .replace("__WORK_EXPERIENCE_LIST_ITEM__", &work_experience_latex)
         .replace("__SKILLS__", &skills_latex);
 
     let result = tauri::async_runtime::spawn_blocking(move || {
@@ -199,6 +242,7 @@ pub async fn generate_pdf(window: Window) -> Result<(), String> {
 pub async fn save_populated_temp_latex(
     app: AppHandle,
     personal_info: PersonalInfo,
+    work_experience: Vec<WorkExperience>,
     education: Vec<Education>,
     skills: Vec<SkillCategory>,
 ) -> Result<(), String> {
@@ -230,6 +274,40 @@ pub async fn save_populated_temp_latex(
             .collect::<Vec<String>>()
             .join("\n    ")
     };
+
+    // Generate LaTeX string for work experience items from the provided data
+    let work_experience_latex = if work_experience.is_empty() {
+        "% No work experience entries provided".to_string()
+    } else {
+        work_experience
+            .iter()
+            .map(|exp| {
+                format!(
+                    "\\resumeSubHeadingListStart\n  \\resumeSubheading\n      {{{}}}{{{} $|$ {}}}{{{}}}\n      \\resumeItemListStart\n        {}\n      \\resumeItemListEnd\n\\resumeSubHeadingListEnd",
+                    exp.company,
+                    exp.location,
+                    exp.dates,
+                    exp.role,
+                    exp.description_items.iter().map(|item| {
+                        let converted_item = item
+                            .split("**")
+                            .enumerate()
+                            .map(|(i, part)| {
+                                if i % 2 == 1 {
+                                    format!("\\textbf{{{}}}", part)
+                                } else {
+                                    part.to_string()
+                                }
+                            })
+                            .collect::<String>();
+                        format!("   \\resumeItem{{{}}}", converted_item)
+                    }).collect::<Vec<String>>().join("\n        ")
+                )
+            })
+            .collect::<Vec<String>>()
+            .join("\n  ")
+    };
+    println!("Work Experience LaTeX:\n{}", work_experience_latex);
 
     // Generate LaTeX string for skills from the provided data
     let skills_latex = if skills.is_empty() {
@@ -278,6 +356,7 @@ pub async fn save_populated_temp_latex(
         .replace("__WEBSITE__", &personal_info.website)
         .replace("__SUMMARY__", &personal_info.summary)
         .replace("__EDUCATION_LIST_ITEM__", &education_latex)
+        .replace("__WORK_EXPERIENCE_LIST_ITEM__", &work_experience_latex)
         .replace("__SKILLS__", &skills_latex);
 
     // Save to the current working directory (./temp.tex)
@@ -299,11 +378,19 @@ pub async fn save_populated_temp_latex(
 pub async fn refresh_temp_view(
     app: AppHandle,
     personal_info: PersonalInfo,
+    work_experience: Vec<WorkExperience>,
     education: Vec<Education>,
     skills: Vec<SkillCategory>,
 ) -> Result<String, String> {
     // First, save the populated LaTeX to temp.tex
-    save_populated_temp_latex(app.clone(), personal_info, education, skills).await?;
+    save_populated_temp_latex(
+        app.clone(),
+        personal_info,
+        work_experience,
+        education,
+        skills,
+    )
+    .await?;
 
     // Save to the current working directory (./temp.tex and ./temp.pdf)
     let temp_tex_path = Path::new("../temp/temp.tex");

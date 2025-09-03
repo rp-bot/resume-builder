@@ -58,6 +58,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({ resumeData }) => {
       // First, generate the PDF
       await invoke<string>("refresh_temp_view", {
         personalInfo: { name, email, linkedin, github, website, summary },
+        workExperience: resumeData.workExperience || [],
         education: resumeData.education || [],
         skills: resumeData.skills || [],
       });

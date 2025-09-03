@@ -10,13 +10,15 @@ export interface PersonalInformation
   summary: string;
 }
 
-// export interface WorkExperience {
-//   id: string; // Use for React's `key` prop
-//   company: string;
-//   role: string;
-//   dates: string;
-//   description: string;
-// }
+export interface WorkExperience
+{
+  id: string; // Use for React's `key` prop
+  company: string;
+  role: string;
+  location: string;
+  dates: string;
+  descriptionItems: string[]; // Array of description bullet points
+}
 
 export interface Education
 {
@@ -38,7 +40,7 @@ export interface SkillCategory
 export interface ResumeData
 {
   personalInfo: PersonalInformation;
-  // workExperience: WorkExperience[];
+  workExperience: WorkExperience[];
   education: Education[];
   skills: SkillCategory[];
 }
